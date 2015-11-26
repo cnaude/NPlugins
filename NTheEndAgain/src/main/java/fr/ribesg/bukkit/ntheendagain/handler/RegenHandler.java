@@ -13,6 +13,7 @@ import fr.ribesg.bukkit.ncore.lang.MessageId;
 import fr.ribesg.bukkit.ncore.node.world.WorldNode;
 import fr.ribesg.bukkit.ntheendagain.Config;
 import fr.ribesg.bukkit.ntheendagain.NTheEndAgain;
+import fr.ribesg.bukkit.ntheendagain.event.RegenEvent;
 import fr.ribesg.bukkit.ntheendagain.task.SlowSoftRegeneratorTaskHandler;
 import fr.ribesg.bukkit.ntheendagain.world.EndChunk;
 import fr.ribesg.bukkit.ntheendagain.world.EndChunks;
@@ -71,14 +72,17 @@ public class RegenHandler {
                 switch (type) {
                     case 0:
                         fr.ribesg.bukkit.ntheendagain.handler.RegenHandler.this.plugin.debug("Hard regen...");
+                        plugin.getServer().getPluginManager().callEvent(new RegenEvent(plugin, "hard", "Hard regen in progress..."));
                         fr.ribesg.bukkit.ntheendagain.handler.RegenHandler.this.hardRegen(false);
                         break;
                     case 1:
                         fr.ribesg.bukkit.ntheendagain.handler.RegenHandler.this.plugin.debug("Soft regen...");
+                        plugin.getServer().getPluginManager().callEvent(new RegenEvent(plugin, "soft", "Soft regen in progress..."));
                         fr.ribesg.bukkit.ntheendagain.handler.RegenHandler.this.softRegen(false);
                         break;
                     case 2:
                         fr.ribesg.bukkit.ntheendagain.handler.RegenHandler.this.plugin.debug("Crystal regen...");
+                        plugin.getServer().getPluginManager().callEvent(new RegenEvent(plugin, "crystal", "Crystal regen in progress..."));
                         fr.ribesg.bukkit.ntheendagain.handler.RegenHandler.this.crystalRegen();
                         break;
                     default:
@@ -144,7 +148,9 @@ public class RegenHandler {
         plugin.debug("Starting regeneration...");
         for (final EndChunk c : chunks) {
             if (System.currentTimeMillis() - lastTime > 500) {
-                plugin.info(prefix + regen + " chunks regenerated (" + i * 100 / totalChunks + "% done)");
+                String message = prefix + regen + " chunks regenerated (" + i * 100 / totalChunks + "% done)";
+                plugin.getServer().getPluginManager().callEvent(new RegenEvent(plugin, "hard", message));
+                plugin.info(message);
                 lastTime = System.currentTimeMillis();
             }
             if (c.hasToBeRegen()) {
@@ -164,6 +170,7 @@ public class RegenHandler {
             i++;
         }
         plugin.info(prefix + "Done.");
+        plugin.getServer().getPluginManager().callEvent(new RegenEvent(plugin, "hard", "Done."));
 
         plugin.exiting(this.getClass(), "hardRegen");
     }
@@ -229,7 +236,7 @@ public class RegenHandler {
                     spawnLoc = world.getSpawnLocation();
                 } else {
                     spawnLoc = worldNode.getWorldSpawnLocation(world.getName());
-                }
+                }                
                 for (final Player p : endWorld.getPlayers()) {
                     p.teleport(spawnLoc);
                     plugin.sendMessage(p, MessageId.theEndAgain_worldRegenerating);
